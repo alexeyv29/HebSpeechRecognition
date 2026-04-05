@@ -1,0 +1,4 @@
+fastapi
+uvicorn>=0.31.1
+python-multipart
+google-generativeai

@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice to Text | תמלול חכם</title>
+    <!-- Modern Web Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Embedded Favicon -->
+    <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='%2306b6d4'/><path d='M35 30 L35 70 L75 50 Z' fill='%23ffffff'/></svg>">
+    
+    <style>
+        :root {
+            --bg-color: #0b1121; /* Deep slate dark */
+            --card-bg: #1e293b;
+            --primary-cyan: #06b6d4;
+            --primary-cyan-hover: #0891b2;
+            --accent-indigo: #6366f1;
+            --accent-indigo-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --border-hover: #475569;
+            --error-color: #ef4444;
+            --success-color: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+        }
+
+        /* ---------------- Hero Section ---------------- */
+        header {
+            text-align: center;
+            padding: 5rem 1.5rem 3rem;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1.2rem;
+            line-height: 1.2;
+            background: linear-gradient(135deg, var(--primary-cyan) 0%, var(--accent-indigo) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 650px;
+            margin: 0 auto;
+            animation: fadeIn 1s ease-out 0.3s both;
+        }
+
+        /* ---------------- Main Interface ---------------- */
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 0 1.5rem 4rem;
+        }
+
+        .app-container {
+            background-color: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 620px;
+            animation: slideUp 0.6s ease-out 0.2s both;
+        }
+
+        .form-group {
+            margin-bottom: 1.8rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+
+        input[type="password"] {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background-color: rgba(15, 23, 42, 0.6);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input[type="password"]:focus {
+            outline: none;
+            border-color: var(--primary-cyan);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2), inset 0 2px 4px rgba(0,0,0,0.2);
+            background-color: rgba(15, 23, 42, 0.9);
+        }
+
+        input[type="password"]:focus + label,
+        .upload-area:focus-within + label {
+            color: var(--text-main);
+        }
+
+        /* ---------------- File Upload Area ---------------- */
+        .upload-area {
+            border: 2px dashed var(--border-hover);
+            border-radius: 16px;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            background-color: rgba(15, 23, 42, 0.4);
+            overflow: hidden;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--accent-indigo);
+            background-color: rgba(99, 102, 241, 0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.1);
+        }
+
+        .upload-area input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--accent-indigo));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .upload-area:hover .upload-icon {
+            transform: scale(1.1);
+        }
+
+        .file-status {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+        
+        .file-hint {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* ---------------- Action Button ---------------- */
+        .btn-submit {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--accent-indigo), var(--primary-cyan));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+            background: var(--border-color);
+            box-shadow: none;
+        }
+
+        /* ---------------- Output Section ---------------- */
+        #output-section {
+            margin-top: 2.5rem;
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease-out;
+        }
+        
+        #output-section.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+        
+        .output-label {
+            font-weight: 600;
+            color: var(--primary-cyan);
+            font-size: 1.05rem;
+        }
+
+        textarea#transcription-result {
+            direction: rtl;
+            text-align: right;
+            width: 100%;
+            min-height: 220px;
+            padding: 1.2rem;
+            border-radius: 12px;
+            border: 1px solid var(--accent-indigo);
+            background-color: rgba(11, 17, 33, 0.8);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            resize: vertical;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        textarea#transcription-result:focus {
+            outline: none;
+            border-color: var(--primary-cyan);
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3), 0 0 0 3px rgba(6, 182, 212, 0.15);
+        }
+
+        /* Tools / Copy button */
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-hover);
+            color: var(--text-muted);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Heebo', sans-serif;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--text-main);
+        }
+
+        /* ---------------- States & Animations ---------------- */
+        .spinner {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-inline-start: 10px;
+        }
+
+        .messages-container {
+            margin-top: 1rem;
+            text-align: center;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .msg-error {
+            color: var(--error-color);
+            display: none;
+            padding: 0.8rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .msg-success {
+            color: var(--success-color);
+            display: none;
+            padding: 0.8rem;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Scrollbar for better dark theme integration */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-hover);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            h1 { font-size: 2.2rem; }
+            header { padding: 3rem 1rem 2rem; }
+            .app-container { padding: 1.8rem; border-radius: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>זיהוי ותמלול קולי</h1>
+        <p class="subtitle">המרת קבצי שמע לטקסט בדיוק מקסימלי עם Gemini 1.5 Flash. עוצב בצורה חלקה עבור סביבות עבודה מודרניות.</p>
+    </header>
+
+    <main>
+        <div class="app-container">
+            <form id="transcription-form">
+                
+                <div class="form-group">
+                    <label for="api-key">מפתח Gemini API (Secret Key)</label>
+                    <input type="password" id="api-key" placeholder="הדבק את ה-API Key שלך כאן" required autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label>בחר או גרור קובץ שמע</label>
+                    <div class="upload-area" id="drop-zone">
+                        <div class="upload-icon">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                <path d="M12 12v.01"/>
+                            </svg>
+                        </div>
+                        <div class="file-status" id="file-name">גרור קובץ לכאן או לחץ לבחירה</div>
+                        <div class="file-hint">תומך בקבצי MP3, WAV, M4A, OGG ועוד (עד 20MB)</div>
+                        <input type="file" id="audio-file" accept="audio/*,video/*" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submit-btn">
+                    <span>התחל תמלול עכשיו</span>
+                    <div class="spinner" id="loading-spinner"></div>
+                </button>
+            </form>
+
+            <div class="messages-container">
+                <div class="msg-error" id="error-msg"></div>
+                <div class="msg-success" id="success-msg">התמלול הושלם בהצלחה!</div>
+            </div>
+
+            <!-- Output Section -->
+            <div id="output-section">
+                <div class="output-header">
+                    <span class="output-label">תוצאת התמלול משולושי דוברים:</span>
+                    <button class="copy-btn" id="copy-btn" type="button">העתק טקסט</button>
+                </div>
+                <textarea id="transcription-result" readonly placeholder="התמלול יופיע כאן..."></textarea>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('audio-file');
+            const fileNameDisplay = document.getElementById('file-name');
+            const form = document.getElementById('transcription-form');
+            const submitBtn = document.getElementById('submit-btn');
+            const btnText = submitBtn.querySelector('span');
+            const spinner = document.getElementById('loading-spinner');
+            const errorMsg = document.getElementById('error-msg');
+            const successMsg = document.getElementById('success-msg');
+            const outputSection = document.getElementById('output-section');
+            const transcriptionArea = document.getElementById('transcription-result');
+            const copyBtn = document.getElementById('copy-btn');
+
+            // --- File Handling & UI --- //
+            fileInput.addEventListener('change', handleFileSelect);
+
+            function handleFileSelect(e) {
+                const files = e.target.files;
+                if (files.length > 0) {
+                    fileNameDisplay.textContent = files[0].name;
+                    dropZone.style.borderColor = 'var(--primary-cyan)';
+                    dropZone.style.backgroundColor = 'rgba(6, 182, 212, 0.05)';
+                }
+            }
+
+            // Drag and Drop Effects
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                if (dt.files.length > 0) {
+                    fileInput.files = dt.files;
+                    handleFileSelect({ target: fileInput });
+                }
+            });
+
+            // --- Form Submission logic --- //
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const apiKey = document.getElementById('api-key').value.trim();
+                const audioFile = fileInput.files[0];
+
+                if (!apiKey || !audioFile) {
+                    showError('שגיאה: יש להזין מפתח API ולבחור קובץ שמע.');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('api_key', apiKey);
+                formData.append('audio_file', audioFile);
+
+                // Update UI state to loading
+                setLoadingState(true);
+
+                try {
+                    const response = await fetch('/api/transcribe', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.detail || 'אירעה שגיאה בשרת או בעיבוד הנתונים.');
+                    }
+
+                    // Success
+                    transcriptionArea.value = data.transcription;
+                    outputSection.classList.add('show');
+                    errorMsg.style.display = 'none';
+                    successMsg.style.display = 'block';
+                    
+                    // Smooth scroll to output
+                    setTimeout(() => {
+                        outputSection.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                    }, 100);
+
+                } catch (err) {
+                    showError(err.message || 'שגיאת רשת. אנא ודא שהשרת פעיל.');
+                } finally {
+                    setLoadingState(false);
+                }
+            });
+
+            // --- Utility functions --- //
+            function setLoadingState(isLoading) {
+                submitBtn.disabled = isLoading;
+                if (isLoading) {
+                    btnText.textContent = 'מתמלל, אנא המתן...';
+                    spinner.style.display = 'block';
+                    errorMsg.style.display = 'none';
+                    successMsg.style.display = 'none';
+                    outputSection.classList.remove('show');
+                } else {
+                    btnText.textContent = 'התחל תמלול עכשיו';
+                    spinner.style.display = 'none';
+                }
+            }
+
+            function showError(msg) {
+                errorMsg.textContent = msg;
+                errorMsg.style.display = 'block';
+                successMsg.style.display = 'none';
+            }
+
+            // Copy to clipboard functionality
+            copyBtn.addEventListener('click', async () => {
+                if (!transcriptionArea.value) return;
+                
+                try {
+                    await navigator.clipboard.writeText(transcriptionArea.value);
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = 'הועתק!';
+                    copyBtn.style.color = 'var(--success-color)';
+                    copyBtn.style.borderColor = 'var(--success-color)';
+                    
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                        copyBtn.style.color = '';
+                        copyBtn.style.borderColor = '';
+                    }, 2000);
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
